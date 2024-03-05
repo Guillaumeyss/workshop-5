@@ -22,7 +22,11 @@ export async function node(
   // this route allows retrieving the current status of the node
    node.get("/status", (req, res) => {
       if(isFaulty){
+        nodeState.x=null;
+        nodeState.decided=null;
+        nodeState.k=null;
         res.status(500).send("faulty");
+
       }
       else {
         res.status(200).send("live");
@@ -34,21 +38,26 @@ export async function node(
 let nodeState: NodeState = {
   killed: false,
   x: initialValue,
-  decided: true,
+  decided: null,
   k: null
 };
 
  // This route allows the node to receive messages from other nodes
 node.post("/message", (req, res) => {
   // TODO: Process the received message according to the Ben-Or algorithm
+  
   res.status(200).send("Message received");
 });
 
 // This route is used to start the consensus algorithm
 node.get("/start", async (req, res) => {
   // TODO: Start the consensus algorithm
+  while(!nodesAreReady()){
+    await new Promise((r) => setTimeout(r, 1000));
+  }
   nodeState.k = 0;
   res.status(200).send("Consensus algorithm started");
+  
 });
 
 // This route is used to stop the consensus algorithm
@@ -60,7 +69,7 @@ node.get("/stop", async (req, res) => {
 
 // Get the current state of a node
 node.get("/getState", (req, res) => {
-  res.status(200).json(nodeState.x);
+  res.status(200).json(nodeState);
 });
 
   // start the server
